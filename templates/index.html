@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Advisor – Smart ETF Recommender</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root{
+      --navy:#173652;
+      --navy-2:#1f4668;
+      --green:#1fa463;
+      --green-2:#149155;
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#19324a;
+      --muted:#7c92a8;
+      --border:#dde6ef;
+      --soft:#eef3f8;
+      --pill:#edf7f1;
+      --blue-pill:#eef4fb;
+      --shadow:0 6px 22px rgba(20,40,60,.08);
+      --radius:14px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: "DM Sans", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns: 220px 1fr 320px;
+      height:100vh;
+      width:100%;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      background: linear-gradient(180deg, #0f2d46 0%, #173652 100%);
+      color:#fff;
+      display:flex;
+      flex-direction:column;
+      border-right:1px solid rgba(255,255,255,.08);
+    }
+
+    .sidebar-brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:24px 18px 20px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+
+    .brand-icon{
+      width:44px;
+      height:44px;
+      border-radius:12px;
+      background:linear-gradient(180deg,#2bd37d,#169859);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:22px;
+      box-shadow:0 8px 20px rgba(0,0,0,.15);
+    }
+
+    .brand-title{
+      font-size:16px;
+      font-weight:700;
+      line-height:1.1;
+    }
+
+    .brand-sub{
+      font-size:12px;
+      color:rgba(255,255,255,.65);
+      margin-top:4px;
+    }
+
+    .nav{
+      padding:14px 10px;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      flex:1;
+    }
+
+    .nav-item{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      text-decoration:none;
+      color:rgba(255,255,255,.75);
+      padding:12px 14px;
+      border-radius:12px;
+      font-size:15px;
+      font-weight:500;
+      transition:.18s ease;
+    }
+
+    .nav-item:hover{
+      background:rgba(255,255,255,.08);
+      color:#fff;
+    }
+
+    .nav-item.active{
+      background:rgba(255,255,255,.12);
+      color:#fff;
+      font-weight:600;
+    }
+
+    .nav-ico{
+      width:20px;
+      text-align:center;
+      opacity:.95;
+    }
+
+    .sidebar-footer{
+      border-top:1px solid rgba(255,255,255,.08);
+      padding:16px 14px 18px;
+    }
+
+    .about-box{
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      padding:14px;
+      background:rgba(255,255,255,.03);
+      font-size:12px;
+      line-height:1.65;
+      color:rgba(255,255,255,.65);
+    }
+
+    .about-box strong{
+      display:block;
+      color:#fff;
+      font-size:14px;
+      margin-bottom:6px;
+    }
+
+    .about-box a{
+      display:inline-block;
+      margin-top:8px;
+      color:#9ce1b7;
+      text-decoration:none;
+      font-weight:600;
+    }
+
+    /* Main */
+    .main{
+      background:var(--bg);
+      overflow-y:auto;
+      height:100vh;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:10;
+      background:#fff;
+      border-bottom:1px solid var(--border);
+      padding:24px 28px 18px;
+    }
+
+    .topbar-row{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:16px;
+    }
+
+    .topbar h1{
+      font-size:20px;
+      font-weight:700;
+      letter-spacing:-.02em;
+      margin-bottom:4px;
+    }
+
+    .topbar p{
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .ai-badge{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border:1px solid var(--border);
+      background:#f9fbfd;
+      border-radius:12px;
+      padding:10px 14px;
+      color:var(--text);
+      font-size:13px;
+      white-space:nowrap;
+    }
+
+    .shield{
+      color:var(--green);
+      font-size:18px;
+    }
+
+    .main-inner{
+      padding:18px 28px 30px;
+    }
+
+    .goal-card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      padding:16px;
+      margin-bottom:18px;
+    }
+
+    .goal-input-row{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    .goal-input-wrap{
+      flex:1;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border:1.5px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      padding:0 12px;
+      min-height:52px;
+    }
+
+    .goal-icon{
+      font-size:18px;
+      color:var(--green);
+      flex-shrink:0;
+    }
+
+    #goal-input{
+      width:100%;
+      border:none;
+      outline:none;
+      resize:none;
+      padding:14px 0;
+      font:inherit;
+      font-size:14px;
+      color:var(--text);
+      background:transparent;
+      min-height:24px;
+      max-height:120px;
+    }
+
+    #goal-input::placeholder{
+      color:#98aaba;
+    }
+
+    .generate-btn{
+      border:none;
+      background:linear-gradient(180deg,var(--green),var(--green-2));
+      color:#fff;
+      padding:0 20px;
+      height:52px;
+      border-radius:12px;
+      font:inherit;
+      font-weight:700;
+      font-size:14px;
+      cursor:pointer;
+      box-shadow:0 8px 18px rgba(31,164,99,.2);
+      transition:.18s ease;
+      white-space:nowrap;
+    }
+
+    .generate-btn:hover{
+      transform:translateY(-1px);
+      filter:brightness(.98);
+    }
+
+    .generate-btn:disabled{
+      opacity:.65;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    .tag-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .tag{
+      font-size:12px;
+      font-weight:600;
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid;
+    }
+
+    .tag-green{
+      background:var(--pill);
+      color:#167e4b;
+      border-color:#bce2ca;
+    }
+
+    .tag-blue{
+      background:var(--blue-pill);
+      color:#4b6786;
+      border-color:#d5e2ef;
+    }
+
+    .section-card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      margin-bottom:16px;
+      overflow:hidden;
+    }
+
+    .section-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 16px 0;
+    }
+
+    .section-title{
+      font-size:15px;
+      font-weight:700;
+    }
+
+    .section-sub{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:500;
+    }
+
+    .edit-btn{
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      border-radius:10px;
+      height:34px;
+      padding:0 12px;
+      font:inherit;
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    .profile-grid{
+      display:grid;
+      grid-template-columns:repeat(4, 1fr);
+      gap:12px;
+      padding:14px 16px 16px;
+    }
+
+    .pbox{
+      border:1px solid var(--border);
+      background:#fbfdff;
+      border-radius:14px;
+      padding:14px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-height:94px;
+    }
+
+    .picon{
+      width:42px;
+      height:42px;
+      border-radius:12px;
+      background:#f2f7fb;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:22px;
+      flex-shrink:0;
+    }
+
+    .plabel{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:2px;
+    }
+
+    .pvalue{
+      font-size:16px;
+      font-weight:700;
+      line-height:1.15;
+    }
+
+    .psub{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:4px;
+    }
+
+    .engine-grid{
+      display:grid;
+      grid-template-columns:1fr 44px 1fr;
+      gap:0;
+      padding:14px 16px 16px;
+      align-items:stretch;
+    }
+
+    .engine-card{
+      border:1.5px solid #dbe5ef;
+      border-radius:14px;
+      padding:16px;
+      background:#fbfdff;
+    }
+
+    .engine-card.primary{
+      border-color:#cfe0f6;
+      background:#f8fbff;
+    }
+
+    .engine-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .engine-left{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+
+    .engine-ico{
+      width:40px;
+      height:40px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:20px;
+      background:#edf4ff;
+    }
+
+    .engine-name{
+      font-size:15px;
+      font-weight:700;
+      line-height:1.15;
+      margin-bottom:3px;
+    }
+
+    .engine-desc{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .engine-score{
+      text-align:right;
+      flex-shrink:0;
+    }
+
+    .engine-score-label{
+      font-size:11px;
+      color:#5d7ca0;
+      font-weight:600;
+      margin-bottom:2px;
+    }
+
+    .engine-score-value{
+      font-size:34px;
+      line-height:1;
+      font-weight:700;
+      letter-spacing:-.03em;
+    }
+
+    .engine-list{
+      list-style:none;
+      padding-left:0;
+      margin-top:10px;
+    }
+
+    .engine-list li{
+      font-size:13px;
+      color:#4d6782;
+      margin-bottom:6px;
+      display:flex;
+      gap:8px;
+      align-items:flex-start;
+    }
+
+    .engine-list li::before{
+      content:"✓";
+      color:var(--green);
+      font-weight:700;
+      flex-shrink:0;
+    }
+
+    .engine-source{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:10px;
+    }
+
+    .engine-divider{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:28px;
+      color:#9cb1c4;
+      font-weight:700;
+    }
+
+    .results-grid{
+      display:grid;
+      grid-template-columns:1.8fr .9fr;
+      gap:16px;
+      align-items:start;
+    }
+
+    .etf-table-wrap{
+      padding:14px 16px 6px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    thead th{
+      font-size:11px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.05em;
+      text-align:left;
+      padding:10px 10px;
+      border-bottom:1px solid var(--border);
+      white-space:nowrap;
+    }
+
+    tbody td{
+      padding:12px 10px;
+      border-bottom:1px solid #eef3f7;
+      vertical-align:middle;
+      font-size:13px;
+    }
+
+    tbody tr:last-child td{
+      border-bottom:none;
+    }
+
+    .rank-badge{
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      font-size:13px;
+    }
+
+    .r1{ background:#fff3d5; color:#9b6a00; }
+    .r2{ background:#edf2f7; color:#56708b; }
+    .r3{ background:#fde9df; color:#9d4519; }
+
+    .etf-name{
+      color:#175fa9;
+      font-weight:700;
+      font-size:13.5px;
+      line-height:1.2;
+    }
+
+    .etf-sub{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:2px;
+    }
+
+    .score-wrap{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:86px;
+    }
+
+    .score-bar{
+      background:#ebf1f6;
+      height:6px;
+      border-radius:999px;
+      flex:1;
+      min-width:54px;
+      overflow:hidden;
+    }
+
+    .score-fill{
+      height:100%;
+      background:linear-gradient(90deg,var(--green),#34c07d);
+      border-radius:999px;
+    }
+
+    .score-num{
+      font-weight:700;
+      color:var(--text);
+      min-width:22px;
+    }
+
+    .risk-pill{
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:11.5px;
+      font-weight:700;
+    }
+
+    .rp-low{ background:#ecf8f1; color:#167e4b; }
+    .rp-med{ background:#fff6df; color:#8a6500; }
+    .rp-high{ background:#fde9e4; color:#a33e23; }
+
+    .ret-pos{ color:#119157; font-weight:700; }
+    .ret-neg{ color:#d04d3b; font-weight:700; }
+
+    .view-btn{
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      border-radius:10px;
+      padding:6px 12px;
+      font:inherit;
+      font-size:12px;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    .bookmark-btn{
+      border:none;
+      background:transparent;
+      color:#90a5b8;
+      font-size:15px;
+      cursor:pointer;
+      margin-left:6px;
+    }
+
+    .view-all-row{
+      text-align:center;
+      padding:10px 0 14px;
+    }
+
+    .view-all-btn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:10px;
+      padding:8px 14px;
+      font:inherit;
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
+      color:var(--text);
+    }
+
+    .shap-wrap{
+      padding:14px 16px 16px;
+    }
+
+    .shap-subtitle{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:4px;
+      margin-bottom:14px;
+    }
+
+    .shap-row{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-bottom:10px;
+    }
+
+    .shap-label{
+      width:145px;
+      font-size:12px;
+      color:#546d86;
+      flex-shrink:0;
+      line-height:1.2;
+    }
+
+    .shap-bar-bg{
+      height:10px;
+      flex:1;
+      border-radius:999px;
+      background:#edf2f6;
+      overflow:hidden;
+    }
+
+    .shap-bar-pos{
+      height:100%;
+      border-radius:999px;
+      background:#188f57;
+    }
+
+    .shap-bar-neg{
+      height:100%;
+      border-radius:999px;
+      background:#d9534f;
+    }
+
+    .shap-val-pos,
+    .shap-val-neg{
+      min-width:42px;
+      text-align:right;
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .shap-val-pos{ color:#188f57; }
+    .shap-val-neg{ color:#d9534f; }
+
+    .shap-footer{
+      margin-top:12px;
+      padding-top:12px;
+      border-top:1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
+      font-size:12px;
+    }
+
+    .shap-footer .muted{
+      color:var(--muted);
+    }
+
+    .shap-footer .score{
+      font-weight:700;
+      color:#188f57;
+    }
+
+    .shap-link{
+      display:inline-block;
+      margin-top:10px;
+      font-size:12px;
+      color:#2567b1;
+      text-decoration:none;
+      font-weight:600;
+    }
+
+    .bottom-grid{
+      display:grid;
+      grid-template-columns:1.2fr .65fr .75fr;
+      gap:16px;
+      margin-top:16px;
+    }
+
+    .card-pad{
+      padding:14px 16px 16px;
+    }
+
+    .projection-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+      align-items:center;
+    }
+
+    .proj-table{
+      width:100%;
+      font-size:13px;
+    }
+
+    .proj-table th,
+    .proj-table td{
+      padding:8px 6px;
+      border-bottom:1px solid #edf2f6;
+      text-align:left;
+    }
+
+    .proj-table th{
+      font-size:11px;
+      color:var(--muted);
+      text-transform:uppercase;
+    }
+
+    .proj-table tr:last-child td{
+      border-bottom:none;
+    }
+
+    .line-chart{
+      height:170px;
+      width:100%;
+    }
+
+    .risk-box{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      min-height:220px;
+    }
+
+    .gauge-wrap{
+      position:relative;
+      width:170px;
+      height:100px;
+      overflow:hidden;
+    }
+
+    .gauge{
+      width:170px;
+      height:170px;
+      border-radius:50%;
+      background:
+        conic-gradient(from 180deg, #1ba062 0 36%, #f2b94b 36% 62%, #e5eaf0 62% 100%);
+      position:absolute;
+      top:0;
+      left:0;
+    }
+
+    .gauge::after{
+      content:"";
+      position:absolute;
+      inset:18px;
+      background:#fff;
+      border-radius:50%;
+    }
+
+    .gauge-label{
+      position:absolute;
+      left:50%;
+      top:62%;
+      transform:translate(-50%,-50%);
+      text-align:center;
+      z-index:2;
+    }
+
+    .gauge-label strong{
+      display:block;
+      font-size:24px;
+      line-height:1;
+      margin-bottom:4px;
+    }
+
+    .gauge-label span{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:600;
+    }
+
+    .risk-stats{
+      display:flex;
+      gap:28px;
+      margin-top:4px;
+    }
+
+    .risk-stat{
+      text-align:center;
+    }
+
+    .risk-stat .val{
+      font-size:28px;
+      font-weight:700;
+      line-height:1;
+      margin-top:4px;
+    }
+
+    .risk-stat .lbl{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .facts-list{
+      list-style:none;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:8px;
+    }
+
+    .facts-list li{
+      font-size:13px;
+      color:#4e6680;
+      display:flex;
+      gap:9px;
+      align-items:flex-start;
+      line-height:1.45;
+    }
+
+    .facts-list li::before{
+      content:"◉";
+      color:#738ca7;
+      font-size:10px;
+      margin-top:4px;
+      flex-shrink:0;
+    }
+
+    /* Chat */
+    .chat-col{
+      background:#fff;
+      border-left:1px solid var(--border);
+      display:flex;
+      flex-direction:column;
+      height:100vh;
+      overflow:hidden;
+      position:sticky;
+      top:0;
+    }
+
+    .chat-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:18px 16px;
+      border-bottom:1px solid var(--border);
+      background:#fff;
+      flex-shrink:0;
+    }
+
+    .chat-head-left{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    .chat-avatar{
+      width:38px;
+      height:38px;
+      border-radius:50%;
+      background:#ecf8f1;
+      color:var(--green);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:20px;
+      flex-shrink:0;
+    }
+
+    .chat-title{
+      font-weight:700;
+      font-size:16px;
+      line-height:1.1;
+    }
+
+    .chat-status{
+      margin-top:4px;
+      color:var(--green);
+      font-size:12px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .chat-status::before{
+      content:"";
+      width:7px;
+      height:7px;
+      border-radius:50%;
+      background:var(--green);
+      display:inline-block;
+    }
+
+    .chat-toggle{
+      color:#6d849b;
+      font-size:18px;
+    }
+
+    .chat-messages{
+      flex:1;
+      overflow-y:auto;
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      background:#fff;
+    }
+
+    .msg{
+      max-width:86%;
+    }
+
+    .msg.bot{
+      align-self:flex-start;
+    }
+
+    .msg.user{
+      align-self:flex-end;
+    }
+
+    .bubble{
+      padding:12px 14px;
+      border-radius:14px;
+      font-size:13px;
+      line-height:1.5;
+      box-shadow:0 1px 2px rgba(0,0,0,.03);
+    }
+
+    .msg.bot .bubble{
+      background:#f4f7fb;
+      color:#445d76;
+      border-top-left-radius:6px;
+    }
+
+    .msg.user .bubble{
+      background:var(--green);
+      color:#fff;
+      border-top-right-radius:6px;
+    }
+
+    .msg-time{
+      margin-top:4px;
+      font-size:11px;
+      color:#9aaabb;
+      padding:0 4px;
+    }
+
+    .msg.user .msg-time{
+      text-align:right;
+    }
+
+    .chat-input-wrap{
+      padding:12px 14px;
+      border-top:1px solid var(--border);
+      background:#fff;
+      flex-shrink:0;
+    }
+
+    .chat-input-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    #chat-input{
+      flex:1;
+      height:42px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:0 14px;
+      outline:none;
+      font:inherit;
+      font-size:13.5px;
+      color:var(--text);
+      background:#fafcff;
+    }
+
+    #chat-input::placeholder{
+      color:#9aaabb;
+    }
+
+    .send-btn{
+      width:42px;
+      height:42px;
+      border:none;
+      border-radius:12px;
+      background:var(--navy);
+      color:#fff;
+      font-size:18px;
+      cursor:pointer;
+      flex-shrink:0;
+    }
+
+    .quick-section{
+      border-top:1px solid var(--border);
+      padding:14px;
+      background:#fff;
+    }
+
+    .quick-title{
+      font-size:12px;
+      font-weight:700;
+      color:#7d92a6;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      margin-bottom:10px;
+    }
+
+    .quick-item{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border:1px solid var(--border);
+      background:#fbfdff;
+      border-radius:12px;
+      padding:11px 12px;
+      text-align:left;
+      font:inherit;
+      font-size:13px;
+      color:#49627b;
+      cursor:pointer;
+      margin-bottom:8px;
+    }
+
+    .quick-item:last-child{
+      margin-bottom:0;
+    }
+
+    .muted-note,
+    .empty-note,
+    .error-note{
+      border-radius:14px;
+      padding:14px 16px;
+      font-size:13px;
+      line-height:1.55;
+      margin-bottom:16px;
+    }
+
+    .muted-note{
+      background:#f5f9fd;
+      border:1px solid #dbe8f3;
+      color:#4c6781;
+    }
+
+    .empty-note{
+      background:#fbfdff;
+      border:1px dashed var(--border);
+      color:#7088a0;
+      text-align:center;
+      padding:30px 20px;
+    }
+
+    .error-note{
+      background:#fff2ef;
+      border:1px solid #f4d2cb;
+      color:#ae4b39;
+    }
+
+    .loading{
+      opacity:.65;
+      pointer-events:none;
+    }
+
+    @media (max-width: 1400px){
+      .results-grid{ grid-template-columns:1fr; }
+      .bottom-grid{ grid-template-columns:1fr; }
+    }
+
+    @media (max-width: 1180px){
+      .layout{
+        grid-template-columns: 90px 1fr 320px;
+      }
+
+      .brand-copy,
+      .nav-text,
+      .about-box{
+        display:none;
+      }
+
+      .sidebar-brand{
+        justify-content:center;
+      }
+
+      .nav-item{
+        justify-content:center;
+        padding:12px;
+      }
+    }
+
+    @media (max-width: 980px){
+      body{ overflow:auto; }
+      .layout{
+        grid-template-columns:1fr;
+        height:auto;
+      }
+      .sidebar, .chat-col{
+        display:none;
+      }
+      .main{
+        height:auto;
+        overflow:visible;
+      }
+      .profile-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+      .engine-grid{
+        grid-template-columns:1fr;
+        gap:12px;
+      }
+      .engine-divider{
+        display:none;
+      }
+      .projection-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width: 680px){
+      .main-inner,
+      .topbar{
+        padding-left:16px;
+        padding-right:16px;
+      }
+
+      .goal-input-row{
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      .generate-btn{
+        width:100%;
+      }
+
+      .profile-grid{
+        grid-template-columns:1fr;
+      }
+
+      .topbar-row{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+    }
+    .shap-toggle-btn{
+  border:1px solid var(--border);
+  background:#f8fbff;
+  color:var(--text);
+  border-radius:10px;
+  padding:6px 12px;
+  font:inherit;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  margin-left:6px;
+}
+
+.shap-toggle-btn:hover{
+  background:#eef5fb;
+}
+
+.shap-expand-row td{
+  background:#fbfdff;
+  padding:0 !important;
+  border-bottom:1px solid #e9f0f6;
+}
+
+.inline-shap-wrap{
+  padding:16px 18px 18px;
+  background:#fbfdff;
+}
+
+.inline-shap-title{
+  font-size:14px;
+  font-weight:700;
+  color:var(--text);
+  margin-bottom:4px;
+}
+
+.inline-shap-subtitle{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:14px;
+}
+
+.inline-shap-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.inline-shap-label{
+  width:180px;
+  flex-shrink:0;
+  font-size:12px;
+  color:#546d86;
+  line-height:1.2;
+}
+
+.inline-shap-bar-bg{
+  flex:1;
+  height:10px;
+  background:#e9f0f6;
+  border-radius:999px;
+  overflow:hidden;
+}
+
+.inline-shap-bar-pos{
+  height:100%;
+  background:#1a9b5e;
+  border-radius:999px;
+}
+
+.inline-shap-bar-neg{
+  height:100%;
+  background:#d9534f;
+  border-radius:999px;
+}
+
+.inline-shap-val-pos,
+.inline-shap-val-neg{
+  min-width:44px;
+  text-align:right;
+  font-size:12px;
+  font-weight:700;
+}
+
+.inline-shap-val-pos{ color:#1a9b5e; }
+.inline-shap-val-neg{ color:#d9534f; }
+
+.action-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.action-row .view-btn,
+.action-row .shap-toggle-btn{
+  min-width:95px;
+}
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">📊</div>
+        <div class="brand-copy">
+          <div class="brand-title">AI Advisor</div>
+          <div class="brand-sub">Smart ETF Recommender</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item active" href="#"><span class="nav-ico">🏠</span><span class="nav-text">Dashboard</span></a>
+        <a class="nav-item" href="#"><span class="nav-ico">🔍</span><span class="nav-text">Discover ETFs</span></a>
+        <a class="nav-item" href="#"><span class="nav-ico">✨</span><span class="nav-text">Compare</span></a>
+        <a class="nav-item" href="#"><span class="nav-ico">♡</span><span class="nav-text">Watchlist</span></a>
+        <a class="nav-item" href="#"><span class="nav-ico">🗂️</span><span class="nav-text">Portfolios</span></a>
+        <a class="nav-item" href="#"><span class="nav-ico">📈</span><span class="nav-text">Performance</span></a>
+        <a class="nav-item" href="#"><span class="nav-ico">📚</span><span class="nav-text">Insights</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="about-box">
+          <strong>About this system</strong>
+          Our AI analyzes 2,264 ETFs using content-based matching, collaborative filtering, and XGBoost ranking with SHAP explanations.
+          <br>
+          <a href="#">Learn more →</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar-row">
+          <div>
+            <h1>Find the right ETFs for your goals</h1>
+            <p>Describe your financial goal in your own words. Our AI will create a personalized portfolio for you.</p>
+          </div>
+          <div class="ai-badge">
+            <span class="shield">🛡️</span>
+            <div>
+              <div style="font-weight:700;">AI Powered</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:1px;">Groq+ ML Models</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="main-inner">
+        <section class="goal-card">
+          <div class="goal-input-row">
+            <div class="goal-input-wrap">
+              <div class="goal-icon">✦</div>
+              <textarea id="goal-input" placeholder="For Example: I want safe long-term growth, low fees, no dividends, and tax-efficient ETFs."></textarea>
+            </div>
+            <button id="generate-btn" class="generate-btn" onclick="generatePortfolio()">Generate Portfolio</button>
+          </div>
+          <div id="goal-tags" class="tag-row">
+            <span class="tag tag-green">Low Risk</span>
+            <span class="tag tag-blue">Long Term</span>
+            <span class="tag tag-blue">Tax Efficient</span>
+            <span class="tag tag-blue">No Dividends</span>
+            <span class="tag tag-blue">Low Fees</span>
+          </div>
+        </section>
+
+        <div id="results-area">
+          <div class="empty-note">
+            Enter your goal and click <strong>Generate Portfolio</strong> to see your ETF recommendations, ranking logic, and portfolio summary.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="chat-col">
+      <div class="chat-head">
+        <div class="chat-head-left">
+          <div class="chat-avatar">🤖</div>
+          <div>
+            <div class="chat-title">AI ChatBot</div>
+            <div class="chat-status">Online</div>
+          </div>
+        </div>
+        <div class="chat-toggle">⌃</div>
+      </div>
+
+      <div id="chat-messages" class="chat-messages">
+        <div class="msg bot">
+          <div class="bubble">Hi! I'm your AI financial advisor. Ask me anything about your portfolio or ETFs.</div>
+        </div>
+      </div>
+
+      <div class="chat-input-wrap">
+        <div class="chat-input-row">
+          <input id="chat-input" type="text" placeholder="Ask a question..." />
+          <button class="send-btn" onclick="sendChat()">➤</button>
+        </div>
+      </div>
+
+      <!-- <div class="quick-section">
+        <div class="quick-title">Quick Questions</div>
+        <button class="quick-item" onclick="askQuickQuestion('Why no bond ETFs?')"><span>Why no bond ETFs?</span><span>›</span></button>
+        <button class="quick-item" onclick="askQuickQuestion('How is my risk calculated?')"><span>How is my risk calculated?</span><span>›</span></button>
+        <button class="quick-item" onclick="askQuickQuestion('What if markets crash?')"><span>What if markets crash?</span><span>›</span></button>
+        <button class="quick-item" onclick="askQuickQuestion('Compare top 3 ETFs')"><span>Compare top 3 ETFs</span><span>›</span></button>
+      </div> -->
+    </aside>
+  </div>
+
+  <script>
+    let lastResults = [];
+    let lastProfile = null;
+
+    function formatPct(v, digits = 1) {
+      if (v === null || v === undefined || Number.isNaN(Number(v))) return "—";
+      return `${Number(v).toFixed(digits)}%`;
+    }
+
+    function formatTER(v) {
+      if (v === null || v === undefined || Number.isNaN(Number(v))) return "—";
+      return `${(Number(v) * 100).toFixed(2)}%`;
+    }
+
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function scoreToWidth(score) {
+      const s = Number(score || 0);
+      return clamp(s, 0, 100);
+    }
+
+    function getProfileTags(profile) {
+      if (!profile) return [];
+      const tags = [];
+
+      const risk = (profile.risk_level || "").toLowerCase();
+      const horizon = (profile.horizon || "").toLowerCase();
+      const distribution = (profile.distribution || "").toLowerCase();
+
+      if (risk) tags.push({ text: risk.charAt(0).toUpperCase() + risk.slice(1) + " Risk", green: true });
+      if (horizon === "long") tags.push({ text: "Long Term" });
+      if (horizon === "medium") tags.push({ text: "Medium Term" });
+      if (horizon === "short") tags.push({ text: "Short Term" });
+
+      if (distribution === "accumulating") {
+        tags.push({ text: "Tax Efficient" });
+        tags.push({ text: "No Dividends" });
+      } else if (distribution === "distributing") {
+        tags.push({ text: "Dividend Income" });
+      }
+
+      if (profile.max_ter !== undefined && profile.max_ter <= 0.0025) {
+        tags.push({ text: "Low Fees" });
+      }
+
+      return tags;
+    }
+
+    function renderGoalTags(profile) {
+      const tags = getProfileTags(profile);
+      const container = document.getElementById("goal-tags");
+      container.innerHTML = tags.map(tag => `
+        <span class="tag ${tag.green ? "tag-green" : "tag-blue"}">${escapeHtml(tag.text)}</span>
+      `).join("");
+    }
+
+    function riskLabelFromVol(vol) {
+      const v = Number(vol || 0);
+      if (v <= 15) return { cls: "rp-low", text: "Low" };
+      if (v <= 25) return { cls: "rp-med", text: "Medium" };
+      return { cls: "rp-high", text: "High" };
+    }
+
+    function buildProfileCard(profile) {
+      const risk = (profile?.risk_level || "low");
+      const horizon = (profile?.horizon || "long");
+      const dist = (profile?.distribution || "accumulating");
+      const ter = Number(profile?.max_ter || 0.005);
+
+      const riskSub =
+        risk === "low" ? "Low volatility preferred" :
+        risk === "medium" ? "Balanced risk profile" :
+        "Higher-return orientation";
+
+      const horizonVal =
+        horizon === "long" ? "Long-term" :
+        horizon === "medium" ? "Medium-term" :
+        "Short-term";
+
+      const horizonSub =
+        horizon === "long" ? "10+ years" :
+        horizon === "medium" ? "3–7 years" :
+        "1–2 years";
+
+      const distVal = dist === "accumulating" ? "Accumulating" : "Distributing";
+      const distSub = dist === "accumulating" ? "No dividend preference" : "Income / payout preference";
+
+      const maxTerText =
+        ter <= 0.002 ? "Low" :
+        ter <= 0.005 ? "Moderate" : "Flexible";
+
+      return `
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <div class="section-title">1. Your AI-Extracted Profile</div>
+            </div>
+          </div>
+          <div class="profile-grid">
+            <div class="pbox">
+              <div class="picon">🛡️</div>
+              <div>
+                <div class="plabel">Risk Level</div>
+                <div class="pvalue">${capitalize(risk)}</div>
+                <div class="psub">${riskSub}</div>
+              </div>
+            </div>
+            <div class="pbox">
+              <div class="picon">🗓️</div>
+              <div>
+                <div class="plabel">Horizon</div>
+                <div class="pvalue">${horizonVal}</div>
+                <div class="psub">${horizonSub}</div>
+              </div>
+            </div>
+            <div class="pbox">
+              <div class="picon">🏛️</div>
+              <div>
+                <div class="plabel">Tax Preference</div>
+                <div class="pvalue">${distVal}</div>
+                <div class="psub">${distSub}</div>
+              </div>
+            </div>
+            <div class="pbox">
+              <div class="picon">％</div>
+              <div>
+                <div class="plabel">Max TER</div>
+                <div class="pvalue">${maxTerText}</div>
+                <div class="psub">(&lt; ${formatTER(ter)})</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function buildEnginesCard(results) {
+      const top = results?.[0] || {};
+      const contentScore = Number(top?.content_score ?? 0.87);
+      const cfScore = Number(top?.cf_score ?? 0.79);
+
+      return `
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <div class="section-title">2. Recommendation Engines <span class="section-sub">(Running in Parallel)</span></div>
+            </div>
+          </div>
+          <div class="engine-grid">
+            <div class="engine-card primary">
+              <div class="engine-top">
+                <div class="engine-left">
+                  <div class="engine-ico">🌀</div>
+                  <div>
+                    <div class="engine-name">Content-Based Model</div>
+                    <div class="engine-desc">Matches profile to ETF features</div>
+                  </div>
+                </div>
+                <div class="engine-score">
+                  <div class="engine-score-label">Content Score</div>
+                  <div class="engine-score-value">${contentScore.toFixed(2)}</div>
+                </div>
+              </div>
+              <ul class="engine-list">
+                <li>Low volatility preference match</li>
+                <li>Low TER / cost-aware ranking</li>
+                <li>Distribution policy alignment</li>
+                <li>Sector and region preference checks</li>
+              </ul>
+              <div class="engine-source">Using ETF feature signals from the cleaned dataset</div>
+            </div>
+
+            <div class="engine-divider">+</div>
+
+            <div class="engine-card">
+              <div class="engine-top">
+                <div class="engine-left">
+                  <div class="engine-ico" style="background:#f2ecff;">👥</div>
+                  <div>
+                    <div class="engine-name">Collaborative Filtering Model</div>
+                    <div class="engine-desc">Similar investors & patterns</div>
+                  </div>
+                </div>
+                <div class="engine-score">
+                  <div class="engine-score-label">CF Score</div>
+                  <div class="engine-score-value">${cfScore.toFixed(2)}</div>
+                </div>
+              </div>
+              <ul class="engine-list">
+                <li>Signals from similar risk & horizon preferences</li>
+                <li>Popular among matching investor profiles</li>
+                <li>Blended into the final hybrid ranker</li>
+                <li>Supports tie-breaking across close ETF matches</li>
+              </ul>
+              <div class="engine-source">Using synthetic user–ETF interaction patterns</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+  function buildETFAndShap(results) {
+    if (!results || !results.length) {
+      return `
+        <div class="section-card">
+          <div class="card-pad">
+            <div class="empty-note" style="margin-bottom:0;">
+              No ETF results were returned for this goal.
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    const rows = results.slice(0, 5).map((etf, i) => {
+      const risk = riskLabelFromVol(Number(etf.volatility ?? etf.yearVolatilityCUR ?? 0));
+      const score = Number(etf.final_score ?? etf.score ?? 0);
+      const score100 = score <= 1 ? (score * 100) : score;
+      const scoreDisplay = score100.toFixed(2);
+      const scoreBarWidth = Math.max(0, Math.min(score100, 100));
+      const rankClass = i === 0 ? "r1" : i === 1 ? "r2" : i === 2 ? "r3" : "r2";
+
+      const shapItems = normalizeShap(etf?.shap_values || etf?.shap_explanation || etf?.shap);
+
+      const shapHtml = shapItems.length
+        ? shapItems.slice(0, 8).map(item => {
+            const val = Number(item.value || 0);
+            const width = clamp(Math.abs(val) * 100, 8, 100);
+            const positive = val >= 0;
+            return `
+              <div class="inline-shap-row">
+                <div class="inline-shap-label">${escapeHtml(item.feature)}</div>
+                <div class="inline-shap-bar-bg">
+                  <div class="${positive ? "inline-shap-bar-pos" : "inline-shap-bar-neg"}" style="width:${width}%"></div>
+                </div>
+                <div class="${positive ? "inline-shap-val-pos" : "inline-shap-val-neg"}">
+                  ${positive ? "+" : ""}${val.toFixed(2)}
+                </div>
+              </div>
+            `;
+          }).join("")
+        : `
+          <div class="muted-note" style="margin-bottom:0;">
+            SHAP explanation not available in the current backend response.
+          </div>
+        `;
+
+      return `
+        <tr>
+          <td><span class="rank-badge ${rankClass}">${i + 1}</span></td>
+          <td>
+            <div class="etf-name">${escapeHtml(etf.name || etf.etf_name || "ETF")}</div>
+            <div class="etf-sub">${escapeHtml(etf.ticker || etf.isin || "")}</div>
+          </td>
+          <td>
+            <div class="score-wrap">
+              <div class="score-num">${scoreDisplay}</div>
+              <div class="score-bar"><div class="score-fill" style="width:${scoreBarWidth}%"></div></div>
+            </div>
+          </td>
+          <td>
+            <span class="risk-pill ${risk.cls}">${risk.text}</span>
+            <div class="etf-sub" style="margin-top:4px;">${formatPct(Number(etf.volatility ?? etf.yearVolatilityCUR ?? 0), 3)}</div>
+          </td>
+          <td>${formatTER(Number(etf.ter || 0))}</td>
+          <td class="${Number(etf.year_return ?? etf.yearReturnCUR ?? 0) >= 0 ? "ret-pos" : "ret-neg"}">
+            ${formatPct(Number(etf.year_return ?? etf.yearReturnCUR ?? 0), 3)}
+          </td>
+          <td>
+            <div class="action-row">
+            <button class="view-btn" onclick="askAboutETF('${jsEscape(etf.name || etf.etf_name || "this ETF")}')">View</button>
+            <button class="shap-toggle-btn" onclick="toggleShapRow(${i})">Why ranked?</button>
+            </div>
+          </td>
+        </tr>
+
+        <tr id="shap-row-${i}" class="shap-expand-row" style="display:none;">
+          <td colspan="7">
+            <div class="inline-shap-wrap">
+              <div class="inline-shap-title">Why ${escapeHtml(etf.name || etf.etf_name || "this ETF")} ranked highly</div>
+              <div class="inline-shap-subtitle">Top feature contributions from the ranking model</div>
+              ${shapHtml}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    return `
+      <div class="section-card">
+        <div class="section-head">
+          <div class="section-title">2. Top Ranked ETFs for You</div>
+        </div>
+        <div class="etf-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>ETF Name</th>
+                <th>Score</th>
+                <th>Risk (Volatility)</th>
+                <th>TER</th>
+                <th>1Y Return</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  function toggleShapRow(idx) {
+    const row = document.getElementById(`shap-row-${idx}`);
+    if (!row) return;
+
+    const isOpen = row.style.display === "table-row";
+
+    document.querySelectorAll(".shap-expand-row").forEach(r => {
+      r.style.display = "none";
+    });
+
+    row.style.display = isOpen ? "none" : "table-row";
+  }
+
+    function buildBottomCards(results, profile) {
+      const top = results?.[0] || {};
+      const expectedReturn = Number(top.year_return ?? top.yearReturnCUR ?? 8);
+      const conservative = Math.max(expectedReturn - 3, 4);
+      const optimistic = expectedReturn + 3;
+      const base = 10000;
+
+      const calc = (rate, years) => Math.round(base * Math.pow(1 + rate / 100, years));
+      const vol = Number(top.volatility ?? top.yearVolatilityCUR ?? 12.4);
+      const riskScore =
+        (profile?.risk_level || "low") === "low" ? 2 :
+        (profile?.risk_level || "medium") === "medium" ? 5 : 8;
+
+      return `
+        <div class="bottom-grid">
+          <div class="section-card">
+            <div class="section-head">
+              <div class="section-title">5. Portfolio Projection <span class="section-sub">(If you invest $10,000)</span></div>
+            </div>
+            <div class="card-pad">
+              <div class="projection-grid">
+                <table class="proj-table">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>1 Year</th>
+                      <th>5 Years</th>
+                      <th>10 Years</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Conservative (${conservative.toFixed(0)}%)</td>
+                      <td>$${calc(conservative, 1).toLocaleString()}</td>
+                      <td>$${calc(conservative, 5).toLocaleString()}</td>
+                      <td>$${calc(conservative, 10).toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Expected (${expectedReturn.toFixed(0)}%)</strong></td>
+                      <td><strong>$${calc(expectedReturn, 1).toLocaleString()}</strong></td>
+                      <td><strong>$${calc(expectedReturn, 5).toLocaleString()}</strong></td>
+                      <td><strong>$${calc(expectedReturn, 10).toLocaleString()}</strong></td>
+                    </tr>
+                    <tr>
+                      <td>Optimistic (${optimistic.toFixed(0)}%)</td>
+                      <td>$${calc(optimistic, 1).toLocaleString()}</td>
+                      <td>$${calc(optimistic, 5).toLocaleString()}</td>
+                      <td>$${calc(optimistic, 10).toLocaleString()}</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <svg class="line-chart" viewBox="0 0 320 170" preserveAspectRatio="none">
+                  <line x1="25" y1="135" x2="300" y2="135" stroke="#dbe5ef" stroke-width="1"/>
+                  <line x1="25" y1="20" x2="25" y2="135" stroke="#dbe5ef" stroke-width="1"/>
+
+                  <polyline points="25,130 95,118 170,102 245,84 300,72" fill="none" stroke="#9caec0" stroke-width="3" stroke-linecap="round"/>
+                  <polyline points="25,128 95,108 170,86 245,60 300,42" fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+                  <polyline points="25,126 95,98 170,66 245,36 300,18" fill="none" stroke="#1fa463" stroke-width="3" stroke-linecap="round"/>
+
+                  <circle cx="25" cy="130" r="3" fill="#9caec0"/><circle cx="95" cy="118" r="3" fill="#9caec0"/><circle cx="170" cy="102" r="3" fill="#9caec0"/><circle cx="245" cy="84" r="3" fill="#9caec0"/><circle cx="300" cy="72" r="3" fill="#9caec0"/>
+                  <circle cx="25" cy="128" r="3" fill="#3b82f6"/><circle cx="95" cy="108" r="3" fill="#3b82f6"/><circle cx="170" cy="86" r="3" fill="#3b82f6"/><circle cx="245" cy="60" r="3" fill="#3b82f6"/><circle cx="300" cy="42" r="3" fill="#3b82f6"/>
+                  <circle cx="25" cy="126" r="3" fill="#1fa463"/><circle cx="95" cy="98" r="3" fill="#1fa463"/><circle cx="170" cy="66" r="3" fill="#1fa463"/><circle cx="245" cy="36" r="3" fill="#1fa463"/><circle cx="300" cy="18" r="3" fill="#1fa463"/>
+
+                  <text x="18" y="150" font-size="11" fill="#7c92a8">Now</text>
+                  <text x="88" y="150" font-size="11" fill="#7c92a8">1Y</text>
+                  <text x="164" y="150" font-size="11" fill="#7c92a8">5Y</text>
+                  <text x="238" y="150" font-size="11" fill="#7c92a8">10Y</text>
+
+                  <text x="302" y="21" font-size="11" fill="#1fa463">Optimistic</text>
+                  <text x="302" y="45" font-size="11" fill="#3b82f6">Expected</text>
+                  <text x="302" y="75" font-size="11" fill="#9caec0">Conservative</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-head">
+              <div class="section-title">6. Risk Summary</div>
+            </div>
+            <div class="risk-box">
+              <div class="gauge-wrap">
+                <div class="gauge"></div>
+                <div class="gauge-label">
+                  <strong>${(profile?.risk_level || "low").charAt(0).toUpperCase() + (profile?.risk_level || "low").slice(1)}</strong>
+                  <span>Risk</span>
+                </div>
+              </div>
+              <div class="risk-stats">
+                <div class="risk-stat">
+                  <div class="lbl">Expected Volatility</div>
+                  <div class="val">${vol.toFixed(1)}%</div>
+                </div>
+                <div class="risk-stat">
+                  <div class="lbl">Risk Score</div>
+                  <div class="val">${riskScore}/10</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-head">
+              <div class="section-title">7. Key Portfolio Facts</div>
+            </div>
+            <div class="card-pad">
+              <ul class="facts-list">
+                <li>Global diversification based on the ETF shortlist returned by the hybrid ranker</li>
+                <li>Low-cost portfolio design with TER aligned to your stated fee preference</li>
+                <li>${profile?.distribution === "accumulating" ? "Tax-efficient accumulating ETFs" : "Distribution-focused ETFs for income needs"}</li>
+                <li>Designed for a ${(profile?.horizon || "long") === "long" ? "long-term" : (profile?.horizon || "long") === "medium" ? "medium-term" : "short-term"} investment horizon</li>
+                <li>Backed by content-based matching, collaborative filtering, and explainable ranking</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function normalizeShap(shap) {
+      if (!shap) return [];
+
+      if (Array.isArray(shap)) {
+        return shap.map(item => {
+          if (typeof item === "object") {
+            return {
+              feature: item.feature || item.name || item.label || "Feature",
+              value: Number(item.value ?? item.shap_value ?? item.score ?? 0)
+            };
+          }
+          return null;
+        }).filter(Boolean);
+      }
+
+      if (typeof shap === "object") {
+        return Object.entries(shap).map(([feature, value]) => ({
+          feature: prettyFeatureName(feature),
+          value: Number(value || 0)
+        })).sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+      }
+
+      return [];
+    }
+
+    function prettyFeatureName(name) {
+      return String(name)
+        .replaceAll("_", " ")
+        .replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function renderResults(payload) {
+      const container = document.getElementById("results-area");
+      const tags = document.getElementById("goal-tags");
+
+      const profile = payload.profile || payload.user_profile || payload.extracted_profile || null;
+      const results = payload.results || payload.recommendations || payload.top_results || [];
+
+      lastProfile = profile;
+      lastResults = results;
+
+      if (payload.error) {
+        tags.innerHTML = "";
+        container.innerHTML = `<div class="error-note">${escapeHtml(payload.error)}</div>`;
+        return;
+      }
+
+      if (payload.intent === false) {
+        tags.innerHTML = "";
+        container.innerHTML = `
+          <div class="muted-note">
+            ${escapeHtml(payload.message || "Hi! I'm your AI financial advisor. Ask me anything about your portfolio or ETFs.")}
+          </div>
+        `;
+        return;
+      }
+
+      renderGoalTags(profile);
+
+      if (!results || !results.length) {
+        container.innerHTML = `
+          <div class="muted-note">
+            ${escapeHtml(payload.message || "The backend responded, but no recommendations were available for this goal.")}
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        ${buildProfileCard(profile)}
+        ${buildETFAndShap(results)}
+      `;
+    }
+
+    async function generatePortfolio() {
+      const goal = document.getElementById("goal-input").value.trim();
+      const btn = document.getElementById("generate-btn");
+      const area = document.getElementById("results-area");
+
+      if (!goal) return;
+
+      btn.disabled = true;
+      btn.textContent = "Generating...";
+      area.innerHTML = `<div class="muted-note">Running your profile through the recommendation pipeline and ranking ETFs...</div>`;
+
+      try {
+        const res = await fetch("/api/recommend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ goal })
+        });
+
+        const data = await res.json();
+        renderResults(data);
+      } catch (err) {
+        area.innerHTML = `<div class="error-note">Failed to generate portfolio. Please check your Flask backend route and try again.</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Generate Portfolio";
+      }
+    }
+
+    function appendMessage(role, text) {
+      const wrap = document.getElementById("chat-messages");
+      const time = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+      const el = document.createElement("div");
+      el.className = `msg ${role}`;
+      el.innerHTML = `
+        <div class="bubble">${escapeHtml(text)}</div>
+        <div class="msg-time">${time}</div>
+      `;
+      wrap.appendChild(el);
+      wrap.scrollTop = wrap.scrollHeight;
+    }
+
+    async function sendChat() {
+      const input = document.getElementById("chat-input");
+      const question = input.value.trim();
+      if (!question) return;
+
+      appendMessage("user", question);
+      input.value = "";
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: question,
+            history: [],
+            profile: lastProfile,
+            results: lastResults
+          })
+        });
+
+        const data = await res.json();
+        const reply = data.reply || data.response || data.answer || "I’m here to help with your ETF portfolio questions.";
+        appendMessage("bot", reply);
+      } catch (err) {
+        appendMessage("bot", "I couldn’t reach the backend chat route. Check the Flask /api/chat endpoint.");
+      }
+    }
+
+    function askQuickQuestion(q) {
+      document.getElementById("chat-input").value = q;
+      sendChat();
+    }
+
+    function askAboutETF(name) {
+      askQuickQuestion(`Why was ${name} ranked highly for me?`);
+    }
+
+    function focusGoalInput() {
+      document.getElementById("goal-input").focus();
+    }
+
+    function capitalize(s) {
+      s = String(s || "");
+      return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function jsEscape(str) {
+      return String(str ?? "").replaceAll("\\", "\\\\").replaceAll("'", "\\'");
+    }
+
+    document.getElementById("chat-input").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendChat();
+      }
+    });
+
+    document.getElementById("goal-input").addEventListener("input", function() {
+      this.style.height = "24px";
+      this.style.height = Math.min(this.scrollHeight, 120) + "px";
+    });
+  </script>
+</body>
+</html>
