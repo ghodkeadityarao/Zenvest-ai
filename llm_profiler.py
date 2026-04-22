@@ -19,6 +19,9 @@ import re
 from dataclasses import dataclass, asdict
 import os
 
+from dotenv import load_dotenv
+load_dotenv()
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  PASTE YOUR FREE GROQ API KEY HERE
 #  Get one at: https://console.groq.com (free, no credit card)
