@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Advisor – Smart ETF Recommender</title>
+  <title>Zenvest AI – Smart ETF Recommender</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -62,6 +62,99 @@
       padding:24px 18px 20px;
       border-bottom:1px solid rgba(255,255,255,.08);
     }
+
+    .sidebar-content{
+  padding:18px 14px 18px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  flex:1;
+}
+
+.sidebar-card{
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;
+  padding:18px 16px;
+  background:rgba(255,255,255,.05);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.sidebar-card-title{
+  color:#fff;
+  font-size:15px;
+  font-weight:700;
+  margin-bottom:12px;
+}
+
+.sidebar-list{
+  list-style:none;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding-left:0;
+  margin:0;
+}
+
+.sidebar-list li{
+  color:rgba(255,255,255,.78);
+  font-size:13px;
+  line-height:1.45;
+  display:flex;
+  gap:8px;
+  align-items:flex-start;
+}
+
+.sidebar-list li::before{
+  content:"•";
+  color:#9ce1b7;
+  font-weight:700;
+  flex-shrink:0;
+}
+
+.info-card{
+  color:rgba(255,255,255,.78);
+}
+
+.sidebar-example-btn{
+  width:100%;
+  text-align:left;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  border-radius:12px;
+  padding:11px 12px;
+  font:inherit;
+  font-size:13px;
+  cursor:pointer;
+  margin-bottom:8px;
+  transition:.18s ease;
+}
+
+.sidebar-example-btn:last-child{
+  margin-bottom:0;
+}
+
+.sidebar-example-btn:hover{
+  background:rgba(255,255,255,.11);
+  border-color:rgba(255,255,255,.18);
+}
+
+.about-box{
+  font-size:13px;
+  line-height:1.65;
+  color:rgba(255,255,255,.78);
+}
+
+.about-box strong{
+  display:block;
+  color:#fff;
+  font-size:15px;
+  margin-bottom:10px;
+}
+
+.sidebar-footer{
+  display:none;
+}
 
     .brand-icon{
       width:44px;
@@ -1323,27 +1416,31 @@
       <div class="sidebar-brand">
         <div class="brand-icon">📊</div>
         <div class="brand-copy">
-          <div class="brand-title">AI Advisor</div>
-          <div class="brand-sub">Smart ETF Recommender</div>
+          <div class="brand-title">ZenVest AI</div>
+          <div class="brand-sub">Smart ETF Advisor</div>
         </div>
       </div>
 
-      <nav class="nav">
-        <a class="nav-item active" href="#"><span class="nav-ico">🏠</span><span class="nav-text">Dashboard</span></a>
-        <a class="nav-item" href="#"><span class="nav-ico">🔍</span><span class="nav-text">Discover ETFs</span></a>
-        <a class="nav-item" href="#"><span class="nav-ico">✨</span><span class="nav-text">Compare</span></a>
-        <a class="nav-item" href="#"><span class="nav-ico">♡</span><span class="nav-text">Watchlist</span></a>
-        <a class="nav-item" href="#"><span class="nav-ico">🗂️</span><span class="nav-text">Portfolios</span></a>
-        <a class="nav-item" href="#"><span class="nav-ico">📈</span><span class="nav-text">Performance</span></a>
-        <a class="nav-item" href="#"><span class="nav-ico">📚</span><span class="nav-text">Insights</span></a>
-      </nav>
-
-      <div class="sidebar-footer">
-        <div class="about-box">
+      <div class="sidebar-content">
+        <div class="about-box sidebar-card">
           <strong>About this system</strong>
           Our AI analyzes 2,264 ETFs using content-based matching, collaborative filtering, and XGBoost ranking with SHAP explanations.
-          <br>
-          <a href="#">Learn more →</a>
+        </div>
+
+        <div class="sidebar-card info-card">
+          <div class="sidebar-card-title">How it works</div>
+          <ul class="sidebar-list">
+            <li>Extracts your investment profile from natural language</li>
+            <li>Ranks ETFs with hybrid ML scoring</li>
+            <li>Explains recommendations using SHAP</li>
+          </ul>
+        </div>
+
+        <div class="sidebar-card info-card">
+          <div class="sidebar-card-title">Try example goals</div>
+          <button class="sidebar-example-btn" onclick="setGoalExample('I want safe long-term growth, low fees, no dividends, and tax-efficient ETFs.')">Safe long-term growth</button>
+          <button class="sidebar-example-btn" onclick="setGoalExample('I want aggressive long-term growth with moderate risk and global equity exposure.')">Aggressive global growth</button>
+          <button class="sidebar-example-btn" onclick="setGoalExample('I want dividend income ETFs with moderate risk and low fees.')">Dividend income ETFs</button>
         </div>
       </div>
     </aside>
@@ -1372,7 +1469,7 @@
               <div class="goal-icon">✦</div>
               <textarea id="goal-input" placeholder="For Example: I want safe long-term growth, low fees, no dividends, and tax-efficient ETFs."></textarea>
             </div>
-            <button id="generate-btn" class="generate-btn" onclick="generatePortfolio()">Generate Portfolio</button>
+            <button id="generate-btn" class="generate-btn" onclick="generatePortfolio()">Generate</button>
           </div>
           <div id="goal-tags" class="tag-row">
             <span class="tag tag-green">Low Risk</span>
@@ -1385,7 +1482,7 @@
 
         <div id="results-area">
           <div class="empty-note">
-            Enter your goal and click <strong>Generate Portfolio</strong> to see your ETF recommendations, ranking logic, and portfolio summary.
+            Enter your goal and click <strong>Generate</strong> to see your ETF recommendations, ranking logic, and portfolio summary.
           </div>
         </div>
       </div>
@@ -1474,6 +1571,14 @@
       }
 
       return tags;
+    }
+
+    function setGoalExample(text) {
+      const input = document.getElementById("goal-input");
+      input.value = text;
+      input.style.height = "24px";
+      input.style.height = Math.min(input.scrollHeight, 120) + "px";
+      input.focus();
     }
 
     function renderGoalTags(profile) {
