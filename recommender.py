@@ -17,6 +17,8 @@ try:
 except ImportError:
     XGB_AVAILABLE = False
 
+print(f"[recommender] XGBoost available: {XGB_AVAILABLE}")
+
 from llm_profiler import UserProfile
 from data_pipeline import SECTOR_COLS, COUNTRY_COLS
 
@@ -169,39 +171,29 @@ class HybridRanker:
         self.explainer     = None
 
     def train(self, features: pd.DataFrame, labels: pd.Series):
+        if not XGB_AVAILABLE:
+            raise RuntimeError("XGBoost is required but not installed. Run: pip install xgboost")
         self.feature_names = list(features.columns)
-        if XGB_AVAILABLE:
-            self.model = xgb.XGBRegressor(
-                n_estimators=200, max_depth=4, learning_rate=0.05,
-                subsample=0.8, colsample_bytree=0.8,
-                random_state=42, verbosity=0,
-            )
-            self.model.fit(features, labels)
-            self.explainer = shap.TreeExplainer(self.model)
-            print("[recommender] XGBoost ranker trained.")
-        else:
-            print("[recommender] XGBoost not installed — using linear blend ranker.")
+        self.model = xgb.XGBRegressor(
+            n_estimators=200, max_depth=4, learning_rate=0.05,
+            subsample=0.8, colsample_bytree=0.8,
+            random_state=42, verbosity=0,
+        )
+        self.model.fit(features, labels)
+        self.explainer = shap.TreeExplainer(self.model)
+        print("[recommender] XGBoost ranker trained.")
 
     def predict(self, features: pd.DataFrame) -> np.ndarray:
-        if self.model is not None:
-            return self.model.predict(features)
-        return (0.6 * features["content_score"].values
-                + 0.4 * features["cf_score"].values)
+        if self.model is None:
+            raise RuntimeError("HybridRanker has not been trained yet.")
+        return self.model.predict(features)
 
     def explain(self, features: pd.DataFrame, idx: int) -> dict:
-        if self.explainer is not None and XGB_AVAILABLE:
-            row       = features.iloc[[idx]]
-            shap_vals = self.explainer.shap_values(row)[0]
-            return dict(zip(self.feature_names, shap_vals))
-        # Linear fallback attribution
-        row = features.iloc[idx]
-        return {
-            "content_score": float(row["content_score"]) * 0.6,
-            "cf_score":      float(row["cf_score"]) * 0.4,
-            "ter_excess":    -float(row.get("ter_excess", 0)) * 5,
-            "vol_excess":    -float(row.get("vol_excess", 0)) * 4,
-            "dist_match":    float(row.get("dist_match", 0)) * 0.15,
-        }
+        if self.explainer is None:
+            raise RuntimeError("HybridRanker has not been trained yet.")
+        row       = features.iloc[[idx]]
+        shap_vals = self.explainer.shap_values(row)[0]
+        return dict(zip(self.feature_names, shap_vals))
 
 
 # ── Plain-English explanation ─────────────────────────────────────────────────
