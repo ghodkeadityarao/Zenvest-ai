@@ -1,7 +1,7 @@
 # Hybrid LLM-Driven Financial Recommendation System
-**CSCE 670 — Texas A&M University**
-Debmalya Chatterjee · Aditya Rao Ghodke · Durgesh Bhirud
 
+Website: https://zenvest-ai.onrender.com/
+(This website may take 2–3 minutes to load as it is hosted on a free server.)
 ---
 
 ## Overview
